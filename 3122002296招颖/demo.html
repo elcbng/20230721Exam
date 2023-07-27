@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可拖拽组件示例</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        #big{
+            position: relative;
+            width: 1216px;
+            height: 700px;
+        }
+        .choose{
+            position: relative;
+            float: left;
+            width: 300px;
+            height: 700px;
+            background-color: Beige;
+        }
+        .ch-fl{
+            width: 146px;
+            height: 146px;
+            float: left;
+            border: 2px solid white;
+        }
+        .figure{
+            position: relative;
+            float: left;
+            width: 910px;
+            height: 700px;
+            border: 3px solid black;
+        }
+        .square{
+            border: 2px solid black;
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            top: 25px;
+            left: 25px;
+        }
+        .circle{
+            display: block; 
+            border: 2px solid black;
+            border-radius: 50%; 
+            height: 100px; 
+            width: 100px;
+            position: absolute;
+            top: 25px;
+            left: 175px;
+        }
+    </style>
+</head>
+<body>
+    <div id="big">
+        <div class="choose">
+            <div class="ch-fl"></div>
+            <div class="ch-fl"></div>
+            <div class="ch-fl"></div>
+            <div class="ch-fl"></div>
+            <div class="ch-fl"></div>
+            <div class="ch-fl"></div>
+            <div class="ch-fl"></div>
+            <div class="ch-fl"></div>
+        </div>
+        <div class="figure"></div>
+         
+        <div id="circle1" class="circle"></div>
+        <div id="square1" class="square"></div>
+    </div>
+
+    <script>
+        let circle1 = document.getElementById("circle1");
+        let square1 = document.getElementById("square1");
+        //判断边界问题
+        function range(loc,min,max) {
+            if(loc > max) {
+                return max;
+            }else if(loc < min) {
+                return min;
+            }else {
+                return loc;
+            }
+        }
+        //拖拽功能
+        function drag(eg) {
+            let class_name;
+            let init_left = 0, init_top = 0;
+            let newId;
+            let max_num = 0;
+            if (eg.id.includes('square')){
+                class_name = 'square';
+                init_left = 25;
+                init_top = 25;
+            }
+            else if (eg.id.includes('circle')){
+                class_name = 'circle';
+                init_left = 175;
+                init_top = 25;
+            }
+
+            let regex = /(\d+)$/;  //正则匹配出id后的数字
+
+            // 获取字符串后的数字
+            let id = eg.id;
+            let match = regex.exec(id);
+            let number = match ? match[1] : null;
+
+            if (max_num < number + 1){
+                max_num = number + 1;
+            }
+            // 将数字加一并组成新的字符串
+            newId = id.replace(regex, (number ? (parseInt(number) + 1).toString() : ""));
+            eg.onmousedown = function(ev) {
+                let e = ev || window.Event;
+                let eX = e.clientX;
+                let eY = e.clientY;
+                let disX = eX - eg.offsetLeft;
+                let disY = eY - eg.offsetTop;
+                document.onmousemove = function(ev) {
+                    let e = ev || window.Event;
+                    let l = e.clientX - disX;
+                    let h = e.clientY - disY;
+                    //限制范围
+                    l = range(l,0,document.body.clientWidth - eg.offsetWidth - 3);
+                    h = range(h,0,document.body.clientHeight - eg.offsetHeight);
+                    eg.style.left = `${l}px`;
+                    eg.style.top = `${h}px`;
+                }
+                document.onmouseup = function(ev) {
+                    let e = ev || window.Event;
+                    let eX = e.clientX;
+                    let eY = e.clientY;
+                    let disX = eX - eg.offsetLeft;
+                    let disY = eY - eg.offsetTop;
+                    let l = e.clientX - disX;
+                    let h = e.clientY - disY;
+                    //回弹
+                    if (eX < 303 + eg.offsetWidth / 2 || eY > 697 - eg.offsetHeight / 2 ){
+                        eg.style.left = init_left;
+                        eg.style.top = init_top;
+                    }
+                    else{
+                        eg.style.left = `${l}px`;
+                        eg.style.top = `${h}px`;
+                        //创建新的元素
+                        let newElement = document.getElementById(newId);
+                        if(!newElement) {
+                            document.getElementById("big").innerHTML += "<div id=" + newId + "></div>";
+                            let newElement = document.getElementById(newId);
+                            newElement.classList.add(class_name);
+
+                        }
+                        else{
+                            document.onmousemove = null;
+                        }
+                        //为后续新的元素添加拖拽功能
+                        for (let i = 1; i < max_num; i++){
+                            drag(document.getElementById('square' + i));
+                            drag(document.getElementById('circle' + i));
+                        }
+                    }
+                    document.onmousemove = null;
+                }
+            }
+
+        }
+        drag(square1);
+        drag(circle1);
+    </script>
+</body>
+</html>
